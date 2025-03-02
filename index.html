@@ -1,8 +1,49 @@
-<!DOCTYPE html>
+@media (max-width: 768px) {
+            .container {
+                width: 95%;
+                max-width: 100%;
+            }
+            
+            h1 {
+                font-size: 20px;
+                letter-spacing: 1px;
+                text-shadow: 2px 2px 0px #f39c12;
+            }
+            
+            .map-container {
+                height: 350px;
+            }
+            
+            .cat {
+                width: 50px;
+                height: 50px;
+                /* Adjusted starting position for mobile */
+                top: 182px; /* 70% of desktop value */
+                left: 273px; /* 70% of desktop value */
+            }
+            
+            button {
+                padding: 10px 18px;
+                font-size: 14px;
+                letter-spacing: 1px;
+            }
+            
+            .message-bubble {
+                max-width: 150px;
+                padding: 8px 10px;
+                top: 102px; /* 70% of desktop value */
+                left: 357px; /* 70% of desktop value */
+                font-size: 12px;
+            }
+            
+            .info {
+                padding: 15px;
+            }
+        }<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Cat Journey from Safi to Grenoble</title>
     <style>
         body {
@@ -302,13 +343,24 @@
             const startButton = document.getElementById('startJourney');
             const resetButton = document.getElementById('resetJourney');
             
+            // Check if on mobile
+            const isMobile = window.innerWidth <= 768;
+            
             // Destination coordinates (Grenoble position)
-            const destination = { left: 500, top: 170 };
+            const destination = isMobile 
+                ? { left: 350, top: 119 }  // 70% of desktop values for mobile
+                : { left: 500, top: 170 };
             
             // Starting coordinates (Safi position)
-            const start = { left: 390, top: 260 };
+            const start = isMobile
+                ? { left: 273, top: 182 }  // 70% of desktop values for mobile
+                : { left: 390, top: 260 };
             
             let journeyActive = false;
+            
+            // Set initial position based on device
+            cat.style.left = start.left + 'px';
+            cat.style.top = start.top + 'px';
             
             startButton.addEventListener('click', function() {
                 if (!journeyActive) {
@@ -347,6 +399,19 @@
                 startButton.disabled = false;
                 startButton.textContent = 'Start Journey';
                 journeyActive = false;
+            });
+            
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                // If not in the middle of animation, adjust positions
+                if (!journeyActive) {
+                    const currentIsMobile = window.innerWidth <= 768;
+                    
+                    // Only update if mobile status changed
+                    if (currentIsMobile !== isMobile) {
+                        location.reload(); // Simple solution: reload the page
+                    }
+                }
             });
         });
     </script>
