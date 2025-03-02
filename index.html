@@ -96,11 +96,14 @@
             position: absolute;
             width: 8%; /* Percentage-based size */
             height: auto;
-            /* Will be set by JavaScript */
-            transition: all 5s cubic-bezier(0.4, 0, 0.2, 1);
+            top: 0;
+            left: 0;
+            transform: translate(0, 0);
             z-index: 10;
             filter: drop-shadow(0 3px 5px rgba(0,0,0,0.2));
             transform-origin: center;
+            will-change: transform;
+            -webkit-transform: translate(0, 0); /* For Safari */
         }
         
         .message-bubble {
@@ -441,8 +444,10 @@
                 const catX = safiCoords.x * scaleX;
                 const catY = safiCoords.y * scaleY;
                 
-                cat.style.left = `${catX - (cat.offsetWidth / 2)}px`;
-                cat.style.top = `${catY - (cat.offsetHeight / 2)}px`;
+                // Set cat initial position (using transform for better performance)
+                cat.style.transform = `translate(${catX - (cat.offsetWidth / 2)}px, ${catY - (cat.offsetHeight / 2)}px)`;
+                cat.setAttribute('data-start-x', catX - (cat.offsetWidth / 2));
+                cat.setAttribute('data-start-y', catY - (cat.offsetHeight / 2));
                 
                 // Position the message bubble near Grenoble
                 const bubbleX = grenobleCoords.x * scaleX;
@@ -452,13 +457,18 @@
                 messageBubble.style.top = `${bubbleY - 80}px`; // Position above Grenoble
                 
                 return {
-                    safi: { x: catX, y: catY },
-                    grenoble: { x: bubbleX, y: bubbleY }
+                    safi: { x: catX - (cat.offsetWidth / 2), y: catY - (cat.offsetHeight / 2) },
+                    grenoble: { x: bubbleX - (cat.offsetWidth / 2), y: bubbleY - (cat.offsetHeight / 2) }
                 };
             }
             
             // Initialize positions
-            let positions = positionElements();
+            let positions = {};
+            
+            // We need to wait a bit for the SVG to render properly on all devices
+            setTimeout(function() {
+                positions = positionElements();
+            }, 100);
             
             // Start journey button
             startButton.addEventListener('click', function() {
@@ -470,9 +480,9 @@
                     // Update positions in case of resize
                     positions = positionElements();
                     
-                    // Move cat to Grenoble
-                    cat.style.left = `${positions.grenoble.x - (cat.offsetWidth / 2)}px`;
-                    cat.style.top = `${positions.grenoble.y - (cat.offsetHeight / 2)}px`;
+                    // Move cat to Grenoble - using transform for better performance
+                    cat.style.transition = 'transform 5s cubic-bezier(0.4, 0, 0.2, 1)';
+                    cat.style.transform = `translate(${positions.grenoble.x}px, ${positions.grenoble.y}px)`;
                     
                     // Show message bubble after animation completes
                     setTimeout(() => {
@@ -493,15 +503,14 @@
                 // Update positions in case of resize
                 positions = positionElements();
                 
-                // Move cat back to Safi
-                cat.style.left = `${positions.safi.x - (cat.offsetWidth / 2)}px`;
-                cat.style.top = `${positions.safi.y - (cat.offsetHeight / 2)}px`;
+                // Move cat back to Safi - using transform for better performance
+                cat.style.transform = `translate(${positions.safi.x}px, ${positions.safi.y}px)`;
                 
                 // Force reflow
                 void cat.offsetWidth;
                 
                 // Add transition back
-                cat.style.transition = 'all 5s cubic-bezier(0.4, 0, 0.2, 1)';
+                cat.style.transition = 'transform 5s cubic-bezier(0.4, 0, 0.2, 1)';
                 
                 // Reset button state
                 startButton.disabled = false;
@@ -511,25 +520,23 @@
             
             // Handle window resize
             window.addEventListener('resize', function() {
-                // Reposition elements if not in the middle of journey
-                if (!journeyActive) {
+                // Recalculate positions
+                setTimeout(function() {
                     positions = positionElements();
-                } else {
-                    // If journey is in progress, only update the message bubble
-                    const mapRect = mapContent.getBoundingClientRect();
-                    const scaleX = mapRect.width / svgWidth;
-                    const scaleY = mapRect.height / svgHeight;
                     
-                    const bubbleX = grenobleCoords.x * scaleX;
-                    const bubbleY = grenobleCoords.y * scaleY;
-                    
-                    messageBubble.style.left = `${bubbleX - (messageBubble.offsetWidth / 2)}px`;
-                    messageBubble.style.top = `${bubbleY - 80}px`;
-                }
+                    // If journey is active, update cat position to Grenoble
+                    if (journeyActive) {
+                        cat.style.transition = 'none';
+                        cat.style.transform = `translate(${positions.grenoble.x}px, ${positions.grenoble.y}px)`;
+                        
+                        // Force reflow
+                        void cat.offsetWidth;
+                        
+                        // Add transition back
+                        cat.style.transition = 'transform 5s cubic-bezier(0.4, 0, 0.2, 1)';
+                    }
+                }, 100);
             });
-            
-            // Initial setup
-            positionElements();
         });
     </script>
 </body>
