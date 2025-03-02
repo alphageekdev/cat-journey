@@ -1,51 +1,14 @@
-@media (max-width: 768px) {
-            .container {
-                width: 95%;
-                max-width: 100%;
-            }
-            
-            h1 {
-                font-size: 20px;
-                letter-spacing: 1px;
-                text-shadow: 2px 2px 0px #f39c12;
-            }
-            
-            .map-container {
-                height: 350px;
-            }
-            
-            .cat {
-                width: 50px;
-                height: 50px;
-                /* Adjusted starting position for mobile */
-                top: 182px; /* 70% of desktop value */
-                left: 273px; /* 70% of desktop value */
-            }
-            
-            button {
-                padding: 10px 18px;
-                font-size: 14px;
-                letter-spacing: 1px;
-            }
-            
-            .message-bubble {
-                max-width: 150px;
-                padding: 8px 10px;
-                top: 102px; /* 70% of desktop value */
-                left: 357px; /* 70% of desktop value */
-                font-size: 12px;
-            }
-            
-            .info {
-                padding: 15px;
-            }
-        }<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Cat Journey from Safi to Grenoble</title>
     <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+        
         body {
             margin: 0;
             padding: 0;
@@ -56,13 +19,14 @@
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            overflow: hidden;
+            overflow-x: hidden;
         }
         
         .container {
             width: 90%;
             max-width: 900px;
             text-align: center;
+            padding: 20px 0;
         }
         
         h1 {
@@ -73,28 +37,70 @@
             letter-spacing: 3px;
             text-shadow: 3px 3px 0px #f39c12;
             font-family: 'Courier New', Courier, monospace;
+            font-size: clamp(1.2rem, 4vw, 2rem);
+            line-height: 1.2;
         }
         
         .map-container {
             position: relative;
             width: 100%;
-            height: 500px;
+            height: 0;
+            padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+            background-color: #c2e9fb;
             border-radius: 10px;
             overflow: hidden;
             box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
             margin-bottom: 20px;
         }
         
+        .map-content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .world-map {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        
+        .land {
+            fill: #90c290;
+            stroke: #72a772;
+            stroke-width: 0.5;
+        }
+        
+        .water {
+            fill: #c2e9fb;
+        }
+        
+        .location-dot {
+            fill: #e7d28c;
+            stroke: #333;
+            stroke-width: 1;
+        }
+        
+        .location-label {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            fill: #333;
+            font-weight: bold;
+        }
+        
         .cat {
             position: absolute;
-            width: 70px;
-            height: 70px;
-            /* Starting position at Safi, Morocco */
-            top: 260px;
-            left: 390px;
+            width: 8%; /* Percentage-based size */
+            height: auto;
+            /* Will be set by JavaScript */
             transition: all 5s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 10;
             filter: drop-shadow(0 3px 5px rgba(0,0,0,0.2));
+            transform-origin: center;
         }
         
         .message-bubble {
@@ -102,15 +108,15 @@
             background-color: white;
             border-radius: 20px;
             padding: 12px 15px;
+            width: 30%;
             max-width: 200px;
             box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-            top: 145px;
-            left: 510px;
             font-size: 14px;
             color: #333;
             opacity: 0;
             transition: opacity 0.5s ease;
             z-index: 20;
+            /* Will be set by JavaScript */
         }
         
         .message-bubble:after {
@@ -123,6 +129,21 @@
             border-color: white transparent;
         }
         
+        .travel-path {
+            stroke: #ff6b6b;
+            stroke-width: 2;
+            stroke-dasharray: 5;
+            fill: none;
+            opacity: 0.7;
+            animation: dash 1s linear infinite;
+        }
+        
+        @keyframes dash {
+            to {
+                stroke-dashoffset: 10;
+            }
+        }
+        
         .info {
             background-color: #fff9e6;
             padding: 25px;
@@ -130,6 +151,7 @@
             box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
             border: 3px solid #d35400;
             font-family: 'Courier New', Courier, monospace;
+            width: 100%;
         }
         
         .controls {
@@ -137,6 +159,7 @@
             display: flex;
             justify-content: center;
             gap: 15px;
+            flex-wrap: wrap;
         }
         
         button {
@@ -171,7 +194,38 @@
             background-color: #a0a0a0;
             cursor: not-allowed;
             transform: none;
-            box-shadow: none;
+            box-shadow: 2px 2px 0 #777;
+            border-color: #777;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                width: 95%;
+                padding: 10px 0;
+            }
+            
+            h1 {
+                margin-bottom: 15px;
+                letter-spacing: 1px;
+                text-shadow: 2px 2px 0px #f39c12;
+            }
+            
+            .info {
+                padding: 15px;
+            }
+            
+            button {
+                padding: 10px 15px;
+                font-size: 14px;
+                letter-spacing: 1px;
+                box-shadow: 3px 3px 0 #a04000;
+            }
+            
+            .message-bubble {
+                padding: 8px 12px;
+                font-size: 12px;
+                width: 40%;
+            }
         }
     </style>
 </head>
@@ -179,151 +233,151 @@
     <div class="container">
         <h1>Cat's Journey from Safi to Grenoble</h1>
         <div class="map-container">
-            <!-- Using a more realistic map as a background -->
-            <svg width="100%" height="100%" viewBox="0 0 900 500">
-                <!-- Water background -->
-                <rect width="900" height="500" fill="#cae9f5" />
-                
-                <!-- Europe - more detailed -->
-                <path d="M450,100 L510,80 L590,90 L640,100 L660,130 L650,170 L630,190 L610,200 L590,210 L570,220 L550,230 L530,235 L510,240 L490,245 L470,240 L450,230 L440,220 L430,205 L420,190 L410,175 L415,160 L425,140 L440,120 Z" fill="#e5e5be" stroke="#bbb" stroke-width="1" />
-                
-                <!-- France - more detailed -->
-                <path d="M430,170 L450,160 L470,165 L490,170 L505,180 L510,195 L505,210 L490,220 L470,225 L450,220 L435,210 L425,195 Z" fill="#d7e4c5" stroke="#aaa" stroke-width="1" />
-                
-                <!-- Spain & Portugal -->
-                <path d="M390,190 L415,180 L430,190 L425,210 L415,220 L400,230 L380,225 L370,215 L375,200 Z" fill="#e5e5be" stroke="#bbb" stroke-width="1" />
-                
-                <!-- Italy -->
-                <path d="M505,180 L520,170 L535,175 L545,190 L550,210 L540,225 L530,235 L520,220 L510,210 L505,195 Z" fill="#e5e5be" stroke="#bbb" stroke-width="1" />
-                
-                <!-- North Africa - more detailed -->
-                <path d="M350,230 L400,230 L450,250 L500,260 L550,280 L600,300 L630,330 L620,370 L580,390 L520,400 L450,410 L380,405 L340,390 L320,360 L310,320 L330,280 L350,250 Z" fill="#f0e68c" stroke="#d4c76c" stroke-width="1" />
-                
-                <!-- Morocco - more detailed -->
-                <path d="M365,235 L390,240 L415,250 L425,270 L415,290 L400,315 L385,325 L370,315 L355,290 L345,270 L350,250 L360,240 Z" fill="#e6d595" stroke="#d4c76c" stroke-width="1" />
-                
-                <!-- Algeria -->
-                <path d="M415,250 L450,250 L480,260 L505,275 L500,300 L485,330 L465,345 L440,350 L420,340 L400,315 L415,290 L425,270 Z" fill="#eaddaa" stroke="#d4c76c" stroke-width="1" />
-                
-                <!-- Tunisia -->
-                <path d="M505,275 L515,265 L525,270 L530,285 L525,300 L515,310 L500,300 Z" fill="#e8d28a" stroke="#d4c76c" stroke-width="1" />
-                
-                <!-- Libya -->
-                <path d="M530,285 L550,280 L580,290 L600,300 L590,330 L570,350 L545,355 L520,345 L505,335 L495,320 L500,300 L515,310 L525,300 Z" fill="#f2e8b6" stroke="#d4c76c" stroke-width="1" />
-                
-                <!-- Egypt -->
-                <path d="M600,300 L630,330 L620,350 L600,360 L580,355 L570,350 L590,330 Z" fill="#f7edc7" stroke="#d4c76c" stroke-width="1" />
-                
-                <!-- Mediterranean Sea -->
-                <path d="M425,210 L450,220 L480,230 L510,240 L530,235 L540,225 L550,210 L545,190 L535,175 L520,170 L505,180 L490,190 L470,200 L450,195 L435,190 Z" fill="#98c1d9" stroke="none" />
-                
-                <!-- Major rivers -->
-                <path d="M500,170 L495,190 L490,210" stroke="#98c1d9" stroke-width="2" fill="none" />
-                <path d="M450,160 L455,180 L460,200" stroke="#98c1d9" stroke-width="2" fill="none" />
-                
-                <!-- Travel path -->
-                <path d="M390,260 C420,230 450,210 500,170" stroke="#ff6b6b" stroke-width="2" stroke-dasharray="5" fill="none" opacity="0.7">
-                    <animate attributeName="stroke-dashoffset" from="0" to="20" dur="1s" repeatCount="indefinite" />
-                </path>
-                
-                <!-- City markers -->
-                <!-- Safi -->
-                <circle cx="390" cy="260" r="5" fill="#e74c3c" stroke="#fff" stroke-width="1" />
-                <text x="377" y="280" font-family="Arial" font-size="14" fill="#333" font-weight="bold">Safi</text>
-                
-                <!-- Grenoble -->
-                <circle cx="500" cy="170" r="5" fill="#e74c3c" stroke="#fff" stroke-width="1" />
-                <text x="485" y="155" font-family="Arial" font-size="14" fill="#333" font-weight="bold">Grenoble</text>
-                
-                <!-- Country labels -->
-                <text x="460" y="195" font-family="Courier New" font-size="16" fill="#8B4513" font-weight="bold">FRANCE</text>
-                <text x="380" y="270" font-family="Courier New" font-size="16" fill="#8B4513" font-weight="bold">MOROCCO</text>
-                <text x="400" y="215" font-family="Courier New" font-size="16" fill="#8B4513" font-weight="bold">SPAIN</text>
-                <text x="520" y="200" font-family="Courier New" font-size="16" fill="#8B4513" font-weight="bold">ITALY</text>
-                <text x="450" y="320" font-family="Courier New" font-size="16" fill="#8B4513" font-weight="bold">ALGERIA</text>
-                <text x="515" y="290" font-family="Courier New" font-size="16" fill="#8B4513" font-weight="bold">TUNISIA</text>
-                <text x="550" y="320" font-family="Courier New" font-size="16" fill="#8B4513" font-weight="bold">LIBYA</text>
-                <text x="600" y="340" font-family="Courier New" font-size="16" fill="#8B4513" font-weight="bold">EGYPT</text>
-                
-                <!-- Ocean labels -->
-                <text x="450" y="220" font-family="Courier New" font-size="14" fill="#1a5276" font-style="italic" letter-spacing="1px">MEDITERRANEAN SEA</text>
-                <text x="300" y="350" font-family="Courier New" font-size="14" fill="#1a5276" font-style="italic" letter-spacing="1px">ATLANTIC OCEAN</text>
-            </svg>
-            
-            <!-- Cat SVG with better design -->
-            <svg class="cat" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-                <!-- Shadow -->
-                <ellipse cx="50" cy="85" rx="25" ry="5" fill="rgba(0,0,0,0.1)" />
-                
-                <!-- Cat body -->
-                <ellipse cx="50" cy="60" rx="25" ry="20" fill="#f39c12" />
-                
-                <!-- Cat tail -->
-                <path d="M75,60 Q90,50 85,35" stroke="#f39c12" stroke-width="8" fill="none" stroke-linecap="round" />
-                
-                <!-- Cat legs -->
-                <rect x="35" y="75" width="6" height="10" fill="#e67e22" rx="3" />
-                <rect x="60" y="75" width="6" height="10" fill="#e67e22" rx="3" />
-                
-                <!-- Cat head -->
-                <circle cx="50" cy="35" r="18" fill="#f39c12" />
-                
-                <!-- Cat ears -->
-                <polygon points="38,25 42,10 50,20" fill="#e67e22" />
-                <polygon points="62,25 58,10 50,20" fill="#e67e22" />
-                <polygon points="40,23 43,13 49,21" fill="#ffccbc" />
-                <polygon points="60,23 57,13 51,21" fill="#ffccbc" />
-                
-                <!-- Cat eyes -->
-                <ellipse cx="42" cy="32" rx="4" ry="5" fill="white" />
-                <ellipse cx="58" cy="32" rx="4" ry="5" fill="white" />
-                <ellipse cx="42" cy="33" rx="2.5" ry="3.5" fill="#2c3e50" />
-                <ellipse cx="58" cy="33" rx="2.5" ry="3.5" fill="#2c3e50" />
-                <ellipse cx="43" cy="31" rx="1" ry="1" fill="white" />
-                <ellipse cx="59" cy="31" rx="1" ry="1" fill="white" />
-                
-                <!-- Cat nose -->
-                <path d="M50,38 L47,42 L53,42 Z" fill="#e74c3c" />
-                
-                <!-- Cat mouth -->
-                <path d="M47 45 Q50 48, 53 45" stroke="#7f8c8d" stroke-width="1.5" fill="none" />
-                
-                <!-- Cat whiskers -->
-                <line x1="32" y1="42" x2="45" y2="43" stroke="#7f8c8d" stroke-width="1" />
-                <line x1="32" y1="45" x2="45" y2="45" stroke="#7f8c8d" stroke-width="1" />
-                <line x1="32" y1="48" x2="45" y2="47" stroke="#7f8c8d" stroke-width="1" />
-                <line x1="68" y1="42" x2="55" y2="43" stroke="#7f8c8d" stroke-width="1" />
-                <line x1="68" y1="45" x2="55" y2="45" stroke="#7f8c8d" stroke-width="1" />
-                <line x1="68" y1="48" x2="55" y2="47" stroke="#7f8c8d" stroke-width="1" />
-                
-                <!-- Improved Flower in paw -->
-                <g transform="translate(25,50) rotate(-20)">
-                    <!-- Rose petals - outer layer -->
-                    <path d="M0,0 C3,5 8,3 8,-2 C8,-7 3,-9 0,-7 C-3,-9 -8,-7 -8,-2 C-8,3 -3,5 0,0" fill="#e91e63" />
-                    <path d="M0,0 C5,3 7,8 2,8 C-3,8 -5,3 -3,0 C-5,-3 -3,-8 2,-8 C7,-8 5,-3 0,0" fill="#d81b60" />
+            <div class="map-content">
+                <!-- World Map SVG - Using viewBox for responsiveness -->
+                <svg class="world-map" viewBox="0 0 900 500" preserveAspectRatio="xMidYMid meet">
+                    <!-- Water background -->
+                    <rect width="900" height="500" fill="#cae9f5" />
                     
-                    <!-- Rose petals - inner layer -->
-                    <path d="M0,0 C2,3 5,2 5,-1 C5,-4 2,-5 0,-3 C-2,-5 -5,-4 -5,-1 C-5,2 -2,3 0,0" fill="#f06292" />
+                    <!-- Europe - more detailed -->
+                    <path d="M450,100 L510,80 L590,90 L640,100 L660,130 L650,170 L630,190 L610,200 L590,210 L570,220 L550,230 L530,235 L510,240 L490,245 L470,240 L450,230 L440,220 L430,205 L420,190 L410,175 L415,160 L425,140 L440,120 Z" fill="#e5e5be" stroke="#bbb" stroke-width="1" />
                     
-                    <!-- Center of rose -->
-                    <circle cx="0" cy="-1" r="3" fill="#c2185b" />
+                    <!-- France - more detailed -->
+                    <path d="M430,170 L450,160 L470,165 L490,170 L505,180 L510,195 L505,210 L490,220 L470,225 L450,220 L435,210 L425,195 Z" fill="#d7e4c5" stroke="#aaa" stroke-width="1" />
                     
-                    <!-- Stem with detail -->
-                    <path d="M0,6 C1,8 0,14 0,18" stroke="#2e7d32" stroke-width="2" fill="none" />
+                    <!-- Spain & Portugal -->
+                    <path d="M390,190 L415,180 L430,190 L425,210 L415,220 L400,230 L380,225 L370,215 L375,200 Z" fill="#e5e5be" stroke="#bbb" stroke-width="1" />
                     
-                    <!-- Leaves -->
-                    <path d="M0,10 C-5,12 -7,8 -2,7" fill="#66bb6a" stroke="#2e7d32" stroke-width="0.5" />
-                    <path d="M0,14 C5,16 7,12 3,11" fill="#66bb6a" stroke="#2e7d32" stroke-width="0.5" />
+                    <!-- Italy -->
+                    <path d="M505,180 L520,170 L535,175 L545,190 L550,210 L540,225 L530,235 L520,220 L510,210 L505,195 Z" fill="#e5e5be" stroke="#bbb" stroke-width="1" />
                     
-                    <!-- Thorns -->
-                    <path d="M-1,8 L-3,7 L-1,6" fill="#2e7d32" />
-                    <path d="M1,12 L3,11 L1,10" fill="#2e7d32" />
-                </g>
-            </svg>
-            
-            <!-- Message bubble (initially hidden) -->
-            <div class="message-bubble">
-                <span style="font-family: 'Courier New', Courier, monospace; font-weight: bold; color: #d35400;">I'M SORRY BABY, YOU'RE THE BEST HUMAN EVER! ❤️</span>
+                    <!-- North Africa - more detailed -->
+                    <path d="M350,230 L400,230 L450,250 L500,260 L550,280 L600,300 L630,330 L620,370 L580,390 L520,400 L450,410 L380,405 L340,390 L320,360 L310,320 L330,280 L350,250 Z" fill="#f0e68c" stroke="#d4c76c" stroke-width="1" />
+                    
+                    <!-- Morocco - more detailed -->
+                    <path d="M365,235 L390,240 L415,250 L425,270 L415,290 L400,315 L385,325 L370,315 L355,290 L345,270 L350,250 L360,240 Z" fill="#e6d595" stroke="#d4c76c" stroke-width="1" />
+                    
+                    <!-- Algeria -->
+                    <path d="M415,250 L450,250 L480,260 L505,275 L500,300 L485,330 L465,345 L440,350 L420,340 L400,315 L415,290 L425,270 Z" fill="#eaddaa" stroke="#d4c76c" stroke-width="1" />
+                    
+                    <!-- Tunisia -->
+                    <path d="M505,275 L515,265 L525,270 L530,285 L525,300 L515,310 L500,300 Z" fill="#e8d28a" stroke="#d4c76c" stroke-width="1" />
+                    
+                    <!-- Libya -->
+                    <path d="M530,285 L550,280 L580,290 L600,300 L590,330 L570,350 L545,355 L520,345 L505,335 L495,320 L500,300 L515,310 L525,300 Z" fill="#f2e8b6" stroke="#d4c76c" stroke-width="1" />
+                    
+                    <!-- Egypt -->
+                    <path d="M600,300 L630,330 L620,350 L600,360 L580,355 L570,350 L590,330 Z" fill="#f7edc7" stroke="#d4c76c" stroke-width="1" />
+                    
+                    <!-- Mediterranean Sea -->
+                    <path d="M425,210 L450,220 L480,230 L510,240 L530,235 L540,225 L550,210 L545,190 L535,175 L520,170 L505,180 L490,190 L470,200 L450,195 L435,190 Z" fill="#98c1d9" stroke="none" />
+                    
+                    <!-- Major rivers -->
+                    <path d="M500,170 L495,190 L490,210" stroke="#98c1d9" stroke-width="2" fill="none" />
+                    <path d="M450,160 L455,180 L460,200" stroke="#98c1d9" stroke-width="2" fill="none" />
+                    
+                    <!-- Travel path -->
+                    <path id="travel-path" class="travel-path" d="M390,260 C420,230 450,210 500,170" />
+                    
+                    <!-- City markers -->
+                    <!-- Safi -->
+                    <circle id="safi-marker" cx="390" cy="260" r="5" fill="#e74c3c" stroke="#fff" stroke-width="1" />
+                    <text x="377" y="280" font-family="Courier New" font-size="14" fill="#333" font-weight="bold">SAFI</text>
+                    
+                    <!-- Grenoble -->
+                    <circle id="grenoble-marker" cx="500" cy="170" r="5" fill="#e74c3c" stroke="#fff" stroke-width="1" />
+                    <text x="485" y="155" font-family="Courier New" font-size="14" fill="#333" font-weight="bold">GRENOBLE</text>
+                    
+                    <!-- Country labels -->
+                    <text x="460" y="195" font-family="Courier New" font-size="16" fill="#8B4513" font-weight="bold">FRANCE</text>
+                    <text x="380" y="270" font-family="Courier New" font-size="16" fill="#8B4513" font-weight="bold">MOROCCO</text>
+                    <text x="400" y="215" font-family="Courier New" font-size="16" fill="#8B4513" font-weight="bold">SPAIN</text>
+                    <text x="520" y="200" font-family="Courier New" font-size="16" fill="#8B4513" font-weight="bold">ITALY</text>
+                    <text x="450" y="320" font-family="Courier New" font-size="16" fill="#8B4513" font-weight="bold">ALGERIA</text>
+                    <text x="515" y="290" font-family="Courier New" font-size="16" fill="#8B4513" font-weight="bold">TUNISIA</text>
+                    <text x="550" y="320" font-family="Courier New" font-size="16" fill="#8B4513" font-weight="bold">LIBYA</text>
+                    <text x="600" y="340" font-family="Courier New" font-size="16" fill="#8B4513" font-weight="bold">EGYPT</text>
+                    
+                    <!-- Ocean labels -->
+                    <text x="450" y="220" font-family="Courier New" font-size="14" fill="#1a5276" font-style="italic" letter-spacing="1px">MEDITERRANEAN SEA</text>
+                    <text x="300" y="350" font-family="Courier New" font-size="14" fill="#1a5276" font-style="italic" letter-spacing="1px">ATLANTIC OCEAN</text>
+                </svg>
+                
+                <!-- Cat SVG with better design - will be positioned by JavaScript -->
+                <svg class="cat" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+                    <!-- Shadow -->
+                    <ellipse cx="50" cy="85" rx="25" ry="5" fill="rgba(0,0,0,0.1)" />
+                    
+                    <!-- Cat body -->
+                    <ellipse cx="50" cy="60" rx="25" ry="20" fill="#f39c12" />
+                    
+                    <!-- Cat tail -->
+                    <path d="M75,60 Q90,50 85,35" stroke="#f39c12" stroke-width="8" fill="none" stroke-linecap="round" />
+                    
+                    <!-- Cat legs -->
+                    <rect x="35" y="75" width="6" height="10" fill="#e67e22" rx="3" />
+                    <rect x="60" y="75" width="6" height="10" fill="#e67e22" rx="3" />
+                    
+                    <!-- Cat head -->
+                    <circle cx="50" cy="35" r="18" fill="#f39c12" />
+                    
+                    <!-- Cat ears -->
+                    <polygon points="38,25 42,10 50,20" fill="#e67e22" />
+                    <polygon points="62,25 58,10 50,20" fill="#e67e22" />
+                    <polygon points="40,23 43,13 49,21" fill="#ffccbc" />
+                    <polygon points="60,23 57,13 51,21" fill="#ffccbc" />
+                    
+                    <!-- Cat eyes -->
+                    <ellipse cx="42" cy="32" rx="4" ry="5" fill="white" />
+                    <ellipse cx="58" cy="32" rx="4" ry="5" fill="white" />
+                    <ellipse cx="42" cy="33" rx="2.5" ry="3.5" fill="#2c3e50" />
+                    <ellipse cx="58" cy="33" rx="2.5" ry="3.5" fill="#2c3e50" />
+                    <ellipse cx="43" cy="31" rx="1" ry="1" fill="white" />
+                    <ellipse cx="59" cy="31" rx="1" ry="1" fill="white" />
+                    
+                    <!-- Cat nose -->
+                    <path d="M50,38 L47,42 L53,42 Z" fill="#e74c3c" />
+                    
+                    <!-- Cat mouth -->
+                    <path d="M47 45 Q50 48, 53 45" stroke="#7f8c8d" stroke-width="1.5" fill="none" />
+                    
+                    <!-- Cat whiskers -->
+                    <line x1="32" y1="42" x2="45" y2="43" stroke="#7f8c8d" stroke-width="1" />
+                    <line x1="32" y1="45" x2="45" y2="45" stroke="#7f8c8d" stroke-width="1" />
+                    <line x1="32" y1="48" x2="45" y2="47" stroke="#7f8c8d" stroke-width="1" />
+                    <line x1="68" y1="42" x2="55" y2="43" stroke="#7f8c8d" stroke-width="1" />
+                    <line x1="68" y1="45" x2="55" y2="45" stroke="#7f8c8d" stroke-width="1" />
+                    <line x1="68" y1="48" x2="55" y2="47" stroke="#7f8c8d" stroke-width="1" />
+                    
+                    <!-- Improved Flower in paw -->
+                    <g transform="translate(25,50) rotate(-20)">
+                        <!-- Rose petals - outer layer -->
+                        <path d="M0,0 C3,5 8,3 8,-2 C8,-7 3,-9 0,-7 C-3,-9 -8,-7 -8,-2 C-8,3 -3,5 0,0" fill="#e91e63" />
+                        <path d="M0,0 C5,3 7,8 2,8 C-3,8 -5,3 -3,0 C-5,-3 -3,-8 2,-8 C7,-8 5,-3 0,0" fill="#d81b60" />
+                        
+                        <!-- Rose petals - inner layer -->
+                        <path d="M0,0 C2,3 5,2 5,-1 C5,-4 2,-5 0,-3 C-2,-5 -5,-4 -5,-1 C-5,2 -2,3 0,0" fill="#f06292" />
+                        
+                        <!-- Center of rose -->
+                        <circle cx="0" cy="-1" r="3" fill="#c2185b" />
+                        
+                        <!-- Stem with detail -->
+                        <path d="M0,6 C1,8 0,14 0,18" stroke="#2e7d32" stroke-width="2" fill="none" />
+                        
+                        <!-- Leaves -->
+                        <path d="M0,10 C-5,12 -7,8 -2,7" fill="#66bb6a" stroke="#2e7d32" stroke-width="0.5" />
+                        <path d="M0,14 C5,16 7,12 3,11" fill="#66bb6a" stroke="#2e7d32" stroke-width="0.5" />
+                        
+                        <!-- Thorns -->
+                        <path d="M-1,8 L-3,7 L-1,6" fill="#2e7d32" />
+                        <path d="M1,12 L3,11 L1,10" fill="#2e7d32" />
+                    </g>
+                </svg>
+                
+                <!-- Message bubble (initially hidden) -->
+                <div class="message-bubble">
+                    <span style="font-family: 'Courier New', Courier, monospace; font-weight: bold; color: #d35400;">I'M SORRY BABY, YOU'RE THE BEST HUMAN EVER! ❤️</span>
+                </div>
             </div>
         </div>
         
@@ -338,58 +392,112 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // SVG elements
+            const svgMap = document.querySelector('.world-map');
+            const safiMarker = document.getElementById('safi-marker');
+            const grenobleMarker = document.getElementById('grenoble-marker');
             const cat = document.querySelector('.cat');
             const messageBubble = document.querySelector('.message-bubble');
+            
+            // Buttons
             const startButton = document.getElementById('startJourney');
             const resetButton = document.getElementById('resetJourney');
             
-            // Check if on mobile
-            const isMobile = window.innerWidth <= 768;
+            // Get the map container dimensions
+            const mapContainer = document.querySelector('.map-container');
+            const mapContent = document.querySelector('.map-content');
             
-            // Destination coordinates (Grenoble position)
-            const destination = isMobile 
-                ? { left: 350, top: 119 }  // 70% of desktop values for mobile
-                : { left: 500, top: 170 };
-            
-            // Starting coordinates (Safi position)
-            const start = isMobile
-                ? { left: 273, top: 182 }  // 70% of desktop values for mobile
-                : { left: 390, top: 260 };
-            
+            // Track journey state
             let journeyActive = false;
             
-            // Set initial position based on device
-            cat.style.left = start.left + 'px';
-            cat.style.top = start.top + 'px';
+            // Get SVG viewBox dimensions
+            const viewBox = svgMap.getAttribute('viewBox').split(' ');
+            const svgWidth = parseFloat(viewBox[2]);
+            const svgHeight = parseFloat(viewBox[3]);
             
+            // Get the coordinates from the city markers
+            const safiCoords = {
+                x: parseFloat(safiMarker.getAttribute('cx')),
+                y: parseFloat(safiMarker.getAttribute('cy'))
+            };
+            
+            const grenobleCoords = {
+                x: parseFloat(grenobleMarker.getAttribute('cx')),
+                y: parseFloat(grenobleMarker.getAttribute('cy'))
+            };
+            
+            // Function to position elements based on SVG coordinates
+            function positionElements() {
+                // Get the current dimensions of the map container
+                const mapRect = mapContent.getBoundingClientRect();
+                const mapWidth = mapRect.width;
+                const mapHeight = mapRect.height;
+                
+                // Calculate scaling factors
+                const scaleX = mapWidth / svgWidth;
+                const scaleY = mapHeight / svgHeight;
+                
+                // Position the cat at Safi
+                const catX = safiCoords.x * scaleX;
+                const catY = safiCoords.y * scaleY;
+                
+                cat.style.left = `${catX - (cat.offsetWidth / 2)}px`;
+                cat.style.top = `${catY - (cat.offsetHeight / 2)}px`;
+                
+                // Position the message bubble near Grenoble
+                const bubbleX = grenobleCoords.x * scaleX;
+                const bubbleY = grenobleCoords.y * scaleY;
+                
+                messageBubble.style.left = `${bubbleX - (messageBubble.offsetWidth / 2)}px`;
+                messageBubble.style.top = `${bubbleY - 80}px`; // Position above Grenoble
+                
+                return {
+                    safi: { x: catX, y: catY },
+                    grenoble: { x: bubbleX, y: bubbleY }
+                };
+            }
+            
+            // Initialize positions
+            let positions = positionElements();
+            
+            // Start journey button
             startButton.addEventListener('click', function() {
                 if (!journeyActive) {
                     journeyActive = true;
                     startButton.textContent = 'Journey in Progress...';
                     startButton.disabled = true;
                     
-                    // Set the destination coordinates
-                    cat.style.left = destination.left + 'px';
-                    cat.style.top = destination.top + 'px';
+                    // Update positions in case of resize
+                    positions = positionElements();
                     
-                    // Show message bubble after the animation completes
+                    // Move cat to Grenoble
+                    cat.style.left = `${positions.grenoble.x - (cat.offsetWidth / 2)}px`;
+                    cat.style.top = `${positions.grenoble.y - (cat.offsetHeight / 2)}px`;
+                    
+                    // Show message bubble after animation completes
                     setTimeout(() => {
                         messageBubble.style.opacity = '1';
                         startButton.textContent = 'Journey Complete';
-                    }, 5000); // Match transition duration (5s)
+                    }, 5000);
                 }
             });
             
+            // Reset journey button
             resetButton.addEventListener('click', function() {
                 // Hide message bubble
                 messageBubble.style.opacity = '0';
                 
                 // Temporarily remove transition for instant reset
                 cat.style.transition = 'none';
-                cat.style.left = start.left + 'px';
-                cat.style.top = start.top + 'px';
                 
-                // Force reflow to ensure the transition property is removed before adding it back
+                // Update positions in case of resize
+                positions = positionElements();
+                
+                // Move cat back to Safi
+                cat.style.left = `${positions.safi.x - (cat.offsetWidth / 2)}px`;
+                cat.style.top = `${positions.safi.y - (cat.offsetHeight / 2)}px`;
+                
+                // Force reflow
                 void cat.offsetWidth;
                 
                 // Add transition back
@@ -403,16 +511,25 @@
             
             // Handle window resize
             window.addEventListener('resize', function() {
-                // If not in the middle of animation, adjust positions
+                // Reposition elements if not in the middle of journey
                 if (!journeyActive) {
-                    const currentIsMobile = window.innerWidth <= 768;
+                    positions = positionElements();
+                } else {
+                    // If journey is in progress, only update the message bubble
+                    const mapRect = mapContent.getBoundingClientRect();
+                    const scaleX = mapRect.width / svgWidth;
+                    const scaleY = mapRect.height / svgHeight;
                     
-                    // Only update if mobile status changed
-                    if (currentIsMobile !== isMobile) {
-                        location.reload(); // Simple solution: reload the page
-                    }
+                    const bubbleX = grenobleCoords.x * scaleX;
+                    const bubbleY = grenobleCoords.y * scaleY;
+                    
+                    messageBubble.style.left = `${bubbleX - (messageBubble.offsetWidth / 2)}px`;
+                    messageBubble.style.top = `${bubbleY - 80}px`;
                 }
             });
+            
+            // Initial setup
+            positionElements();
         });
     </script>
 </body>
